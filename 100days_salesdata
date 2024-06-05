@@ -1,0 +1,139 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+np.random.seed(42)
+days = pd.date_range(start='2023-01-01', periods=100)
+sales = np.cumsum(np.random.poisson(lam=50, size=100))
+returns = np.cumsum(np.random.poisson(lam=5, size=100))
+df = pd.DataFrame({
+    'Date': days,
+    'Sales': sales,
+    'Returns': returns
+})
+df['NetSales'] = df['Sales'] - df['Returns']
+df['NewSales'] = df['Sales'].diff().fillna(0)
+df['NewReturns'] = df['Returns'].diff().fillna(0)
+df['NewNetSales'] = df['NetSales'].diff().fillna(0)
+
+# Calculate moving averages
+df['SalesMA'] = df['NewSales'].rolling(window=7).mean()
+df['ReturnsMA'] = df['NewReturns'].rolling(window=7).mean()
+df['NetSalesMA'] = df['NewNetSales'].rolling(window=7).mean()
+
+# Calculate summary statistics
+sales_mean = df['NewSales'].mean()
+returns_mean = df['NewReturns'].mean()
+net_sales_mean = df['NewNetSales'].mean()
+
+sales_median = df['NewSales'].median()
+returns_median = df['NewReturns'].median()
+net_sales_median = df['NewNetSales'].median()
+
+sales_std = df['NewSales'].std()
+returns_std = df['NewReturns'].std()
+net_sales_std = df['NewNetSales'].std()
+
+# Visualize data
+plt.figure(figsize=(14, 14))
+
+# Plot daily new sales
+plt.subplot(3, 1, 1)
+plt.plot(df['Date'], df['NewSales'], label='New Sales', color='blue', alpha=0.7)
+plt.plot(df['Date'], df['SalesMA'], label='7-Day Sales MA', color='cyan', linestyle='--')
+plt.axhline(y=sales_mean, color='blue', linestyle='-.', label='Mean Sales')
+plt.title('Daily New Sales')
+plt.xlabel('Date')
+plt.ylabel('Number of Sales')
+plt.legend(loc='upper left')
+plt.grid(True)
+
+# Highlight the maximum and minimum sales day
+max_sales = df[df['NewSales'] == df['NewSales'].max()]
+min_sales = df[df['NewSales'] == df['NewSales'].min()]
+
+plt.axvline(x=max_sales['Date'].values[0], color='blue', linestyle=':')
+plt.axvline(x=min_sales['Date'].values[0], color='blue', linestyle=':')
+plt.annotate(f'Max Sales\n{int(max_sales["NewSales"].values[0])}',
+             xy=(max_sales['Date'].values[0], max_sales['NewSales'].values[0]),
+             xytext=(max_sales['Date'].values[0], max_sales['NewSales'].values[0] + 20),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+plt.annotate(f'Min Sales\n{int(min_sales["NewSales"].values[0])}',
+             xy=(min_sales['Date'].values[0], min_sales['NewSales'].values[0]),
+             xytext=(min_sales['Date'].values[0], min_sales['NewSales'].values[0] - 20),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+
+# Display summary statistics
+plt.text(df['Date'].values[0], sales_mean + 50,
+         f'Mean: {sales_mean:.2f}\nMedian: {sales_median:.2f}\nStd: {sales_std:.2f}',
+         bbox=dict(facecolor='white', alpha=0.5))
+
+# Plot daily new returns
+plt.subplot(3, 1, 2)
+plt.plot(df['Date'], df['NewReturns'], label='New Returns', color='red', alpha=0.7)
+plt.plot(df['Date'], df['ReturnsMA'], label='7-Day Returns MA', color='pink', linestyle='--')
+plt.axhline(y=returns_mean, color='red', linestyle='-.', label='Mean Returns')
+plt.title('Daily New Returns')
+plt.xlabel('Date')
+plt.ylabel('Number of Returns')
+plt.legend(loc='upper left')
+plt.grid(True)
+
+# Highlight the maximum and minimum returns day
+max_returns = df[df['NewReturns'] == df['NewReturns'].max()]
+min_returns = df[df['NewReturns'] == df['NewReturns'].min()]
+
+plt.axvline(x=max_returns['Date'].values[0], color='red', linestyle=':')
+plt.axvline(x=min_returns['Date'].values[0], color='red', linestyle=':')
+plt.annotate(f'Max Returns\n{int(max_returns["NewReturns"].values[0])}',
+             xy=(max_returns['Date'].values[0], max_returns['NewReturns'].values[0]),
+             xytext=(max_returns['Date'].values[0], max_returns['NewReturns'].values[0] + 5),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+plt.annotate(f'Min Returns\n{int(min_returns["NewReturns"].values[0])}',
+             xy=(min_returns['Date'].values[0], min_returns['NewReturns'].values[0]),
+             xytext=(min_returns['Date'].values[0], min_returns['NewReturns'].values[0] - 5),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+
+# Display summary statistics
+plt.text(df['Date'].values[0], returns_mean + 10,
+         f'Mean: {returns_mean:.2f}\nMedian: {returns_median:.2f}\nStd: {returns_std:.2f}',
+         bbox=dict(facecolor='white', alpha=0.5))
+
+# Plot daily new net sales
+plt.subplot(3, 1, 3)
+plt.plot(df['Date'], df['NewNetSales'], label='New Net Sales', color='green', alpha=0.7)
+plt.plot(df['Date'], df['NetSalesMA'], label='7-Day Net Sales MA', color='lightgreen', linestyle='--')
+plt.axhline(y=net_sales_mean, color='green', linestyle='-.', label='Mean Net Sales')
+plt.title('Daily New Net Sales')
+plt.xlabel('Date')
+plt.ylabel('Number of Net Sales')
+plt.legend(loc='upper left')
+plt.grid(True)
+
+# Highlight the maximum and minimum net sales day
+max_net_sales = df[df['NewNetSales'] == df['NewNetSales'].max()]
+min_net_sales = df[df['NewNetSales'] == df['NewNetSales'].min()]
+
+plt.axvline(x=max_net_sales['Date'].values[0], color='green', linestyle=':')
+plt.axvline(x=min_net_sales['Date'].values[0], color='green', linestyle=':')
+plt.annotate(f'Max Net Sales\n{int(max_net_sales["NewNetSales"].values[0])}',
+             xy=(max_net_sales['Date'].values[0], max_net_sales['NewNetSales'].values[0]),
+             xytext=(max_net_sales['Date'].values[0], max_net_sales['NewNetSales'].values[0] + 20),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+plt.annotate(f'Min Net Sales\n{int(min_net_sales["NewNetSales"].values[0])}',
+             xy=(min_net_sales['Date'].values[0], min_net_sales['NewNetSales'].values[0]),
+             xytext=(min_net_sales['Date'].values[0], min_net_sales['NewNetSales'].values[0] - 20),
+             arrowprops=dict(facecolor='black', arrowstyle='->'),
+             ha='center')
+
+# Display summary statistics
+plt.text(df['Date'].values[0], net_sales_mean + 50,
+         f'Mean: {net_sales_mean:.2f}\nMedian: {net_sales_median:.2f}\nStd: {net_sales_std:.2f}',
+         bbox=dict(facecolor='white', alpha=0.5))
+
+plt.tight_layout()
+plt.show()
